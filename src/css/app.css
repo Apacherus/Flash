@@ -1,0 +1,31 @@
+.page-content {
+    padding: 30px;
+    padding-top: 50px;
+}
+
+.app-free .page-content {
+    padding-bottom: 50px;
+}
+
+.statusbar-overlay {
+    background-color: #000000;
+}
+
+/* iPad portrait */
+@media only screen
+and (min-device-width : 768px)
+and (max-device-width : 1024px)
+and (orientation: portrait) {
+
+    .ipad-none {
+        display: none;
+    }
+
+    /*ad banner place*/
+    .app-free .page-content {
+        padding-bottom: 128px !important;
+    }
+
+}
+
+
