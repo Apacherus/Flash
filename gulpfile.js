@@ -12,7 +12,7 @@ var gulp = require('gulp'),
     pngquant = require('imagemin-pngquant'),
     browserSync = require("browser-sync"),
     reload = browserSync.reload,
-    //browserify = require('browserify'),
+    browserify = require('browserify'),
     //source = require("vinyl-source-stream"),
     //reactify = require('reactify'),
     react = require('gulp-react'),
@@ -109,6 +109,7 @@ gulp.task('js:build', function () {
         .pipe(gulp.dest(path.build.js))
         .pipe(reload({stream: true}));
 });
+
 
 gulp.task('js:build-prod', function () {
     gulp.src(path.src.js)
