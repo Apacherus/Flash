@@ -19,6 +19,29 @@
         loadingAnimationTime:700,
         playbackStop:false,
         playbackMode:0,//0 - stoped, 1 - played
+        batteryLevel:100,//0..100
+        batteryUseInMin:0.05,
+        screenBrightnessBeforeLaunch:-1,
+        settings: {
+            flashLightLevel:0.5,
+            playSounds: false,
+            playSoundsMorse: false,
+            soundVolume: 0.5,
+            displayFlash: false,
+            displayFlashColor:'red',
+            displayBrightness: 0.5,
+            restoreScreenBrightness:true
+        },
+        settingsDefault: {
+            flashLightLevel:0.5,
+            playSounds: false,
+            playSoundsMorse: false,
+            soundVolume: 0.5,
+            displayFlash: false,
+            displayFlashColor:'red',
+            displayBrightness: 0.5,
+            restoreScreenBrightness:true
+        },
         meta: {
             title:"App",
             hashtag:"#app",
@@ -27,6 +50,10 @@
         },
         morse:{
             playSound:true,
+            sound: {
+                dot:"data/sound/100.wav",
+                dash:"data/sound/200.wav"
+            },
             duration:{
                 dot:50,
                 dash:50*3,
@@ -136,10 +163,7 @@
             JSAPI.keepScreenOn();
 
             app.loadingStart();
-
-
-
-
+            app.settingsApply();
 
             app.dom7('#turnOn').on('click', function(){
                 app.flashLightOn();
@@ -150,8 +174,9 @@
 
             app.compass();
             app.GPSInit();
-            app.batteryTime();
+            app.batteryInit();
             app.flashlightButtonInit();
+            app.flashLightLevelSliderInit();
 
             app.f7.onPageInit('morse', function(page){
                 app.pageMorseInit(page);
@@ -161,6 +186,25 @@
                 app.pageMorseListInit(page);
             });
 
+            app.f7.onPageInit('settings', function(page){
+                app.pageSettingsInit();
+            });
+
+            /*app.dom7('#test').on('change', function(){
+                console.log("SLIDER");
+            });
+            document.getElementById('test').addEventListener('change', function(){
+                console.log("test");
+            })*/
+
+
+
+        },
+        destroy: function(){
+            //restore screen brightness
+            if(app.settings.restoreScreenBrightness){
+                app.JSAPI.setScreenBrightness(app.screenBrightnessBeforeLaunch);
+            }
         },
         /**
          * функция показа банера (в фри версии)
@@ -190,6 +234,46 @@
         },
         setLocalDB: function(db){
           localStorage.setItem("db", JSON.stringify(db));
+        },
+
+        pageSettingsInit: function(){
+            app.dom7('#settings-sounds').change(function(){
+                app.settingsSet('playSounds', app.dom7('#settings-sounds').prop('checked'));
+            });
+
+            app.dom7('#settings-sounds').prop('checked', app.settings.playSounds);
+
+            app.dom7('#settings-sounds-morse').change(function(){
+                app.settingsSet('playSoundsMorse', app.dom7('#settings-sounds-morse').prop('checked'));
+            });
+
+            app.dom7('#settings-sounds-morse').prop('checked', app.settings.playSoundsMorse);
+
+            app.dom7('#settings-display-flash').change(function(){
+                app.settingsSet('displayFlash', app.dom7('#settings-display-flash').prop('checked'));
+            });
+
+            app.dom7('#settings-display-flash').prop('checked', app.settings.displayFlash);
+
+            app.dom7('#settings-volume').prop('value', app.settings.soundVolume);
+            app.dom7('#settings-display-brightness').prop('value', app.settings.displayBrightness);
+            app.dom7('#settings-flashlight-brightness').prop('value', app.settings.flashLightLevel);
+
+            app.settings_sliders_interval = setInterval(app.pageSettingsSlidersCheck, 500);
+        },
+        //framework7 range element not support good onchange method
+        pageSettingsSlidersCheck: function(){
+            if(app.dom7('#settings-volume').prop('value') != app.settings.soundVolume){
+                app.settingsSet('soundVolume', app.dom7('#settings-volume').prop('value'));
+            }
+
+            if(app.dom7('#settings-display-brightness').prop('value') != app.settings.displayBrightness){
+                app.settingsSet('displayBrightness', app.dom7('#settings-display-brightness').prop('value'));
+            }
+
+            if(app.dom7('#settings-flashlight-brightness').prop('value') != app.settings.flashLightLevel){
+                app.settingsSet('flashLightLevel', app.dom7('#settings-flashlight-brightness').prop('value'));
+            }
         },
         morseItemSave: function(text, id){
             if(id == undefined){
@@ -224,6 +308,12 @@
             app.setLocalDB(db);
         },
         loadingStart: function(){
+
+            app.settingsLoad();
+            if(app.JSAPI.getScreenBrightness) {
+                app.screenBrightnessBeforeLaunch = app.JSAPI.getScreenBrightness();
+            }
+
             if(!app.loadingDisabled) {
                 setTimeout(app.loadingFinish, app.loadingFakeTime);//fake loading
             } else {
@@ -242,10 +332,12 @@
         flashLightOn: function(){
             console.log("LIGHT: ON");
             app.dom7('.flashlight').removeClass('off');
+            app.JSAPI.flashLightOn();
         },
         flashLightOff: function(){
             console.log("LIGHT: OFF");
             app.dom7('.flashlight').addClass('off');
+            app.JSAPI.flashLightOff();
         },
         /**
          * включает фонарик на какое-то время (в мс),
@@ -267,6 +359,16 @@
             app.flashLightForTime(app.morse.duration.dash);
         },
         morseDotSound: function(){
+            if(!app.soundEnable) return;
+            var snd = new Sound(app.morse.sound.dot);
+            snd.volume(app.soundVolume);
+            snd.play();
+        },
+        morseDashSound: function(){
+            if(!app.soundEnable) return;
+            var snd = new Sound(app.morse.sound.dash);
+            snd.volume(app.soundVolume);
+            snd.play();
 
         },
         char2Morse: function(char){
@@ -306,28 +408,28 @@
 
             console.log("MORSE: "+morse[position_morse]);
             var duration = 0;
-            var sound_src = "";
+           // var sound_src = "";
             if(morse[position_morse] == '.'){
                 duration = app.morse.duration.dot;
-                sound_src = "data/sound/100.wav";
+                app.morseDotSound();
             } else if(morse[position_morse] == "-") {
                 duration = app.morse.duration.dash;
-                sound_src = "data/sound/200.wav";
+                app.morseDashSound();
             } else if(morse[position_morse] == " ") {
                 duration = app.morse.duration.spaceBetweenWords;
-                sound_src = "";
+                //sound_src = "";
             }
 
             app.flashLightForTime(duration);
 
             duration = duration + app.morse.duration.spaceBetweenSymbols;
-            if(app.morse.playSound) {
+           /* if(app.morse.playSound) {
                 var audio = document.createElement('audio');
                 audio.src = sound_src;
                 audio.play();
-            }
+            }*/
             setTimeout(function(){
-                audio = null;
+                //audio = null;
                 app.morsePlay(morse, position_morse+1, text, position);
             }, duration);
         },
@@ -377,21 +479,48 @@
         },
 
         compass: function(){
+
             var rotate = function (deg) {
                 app.dom7(".compass").css({ "transform": "rotate(0deg)"});
                 app.dom7(".compass").css({ "transform": "rotate(" + deg + "deg)"});
             };
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener("deviceorientation", function (e) {
-                    rotate(360 - e.alpha);
-                }, false);
+
+            if (app.JSAPI.listenMagneticField) {
+                console.log("Use JSAPI magneticField");
+                app.JSAPI.listenMagneticField(2000);
+                JSAPI.log("LISTEN");
+
+                window.addEventListener('magneticFieldChangedEvent', function () {
+                    console.log('magnetic changed ' + getBufferEventVar().x + ' | ' + getBufferEventVar().y + ' | ' + getBufferEventVar().z);
+                    rotate(360 - getBufferEventVar().x);
+                });
+
+            } else {
+                JSAPI.log("LISTEN2");
+                if (window.DeviceOrientationEvent) {//html5
+                    console.log("Use html5 device orientation");
+                    window.addEventListener("deviceorientation", function (e) {
+                        rotate(360 - e.alpha);
+                    }, false);
+                } else {
+                    console.log("No available methods for get magnetic field information! Your device realy support it?");
+                }
             }
+
+
         },
 
         GPSInit: function(){
-            if(navigator.geolocation){
-                navigator.geolocation.watchPosition(app.GPSWatch);
-            }
+            //if(navigator.geolocation){//html5
+           //     navigator.geolocation.watchPosition(app.GPSWatch);
+           // } else {//fallback to webactivity JSAPI
+                //app.JSAPI.log("START GPS WATCH");
+                app.JSAPI.listenLocation(500, 0, 'gps');
+                window.addEventListener('locationChangedEvent', function(){
+                    //app.JSAPI.log("GPS LISTENER"+getBufferEventVar().latitude);
+                    app.GPSWatch({coords:getBufferEventVar()});
+                });
+            //}
         },
 
         GPSWatch: function(position){
@@ -405,15 +534,17 @@
 
         },
 
-        batteryTime: function(){
-            app.dom7('.battery').text('2h 30m');
-        },
         //0, 1, 2
         flashlightButtonState:0,
         flashLightButtonScrollStart:false,
 
+        flashLightButton : {
+            _value:0,
+             stopAllAnimations: false
+        },
+
         flashlightButtonInit: function(){
-            var wrapper = app.dom7('.flashlight-button-wrapper');
+            /*var wrapper = app.dom7('.flashlight-button-wrapper');
             var button = app.dom7('.flashlight-button');
             wrapper.on('click', function(){
                 return false;
@@ -442,7 +573,68 @@
                 } else if(app.flashlightButtonState != 2) {
                     app.buttonStateOff();
                 }
+            });*/
+
+            var slider = app.dom7('.range-slider');
+            slider.touchstart(function(){
+                console.log("START");
+                app.flashLightButton.stopAllAnimations = true;
+
             });
+
+            slider.touchend(function(){
+                console.log("END");
+                app.flashLightButton.stopAllAnimations = false;
+                app.flashLightButtonSliderAnimate();
+            });
+
+            var checkSliderValue = function(){
+                var slider_value = document.getElementById('flashLightButton').value;
+                if(app.flashLightButton._value != slider_value) {
+                    app.flashLightButtonChange(slider_value);
+                    app.flashLightButton._value = slider_value;
+                }
+                setTimeout(checkSliderValue, 50);
+            };
+            checkSliderValue();
+
+        },
+        flashLightButtonChange: function(value){
+            //if(app.flashLightButton.stop) return;
+            //app.flashLightButton.stop = true;
+            console.log("CHANGED: "+value);
+            //app.flashLightButtonSliderAnimate()
+        },
+        flashLightButtonSliderAnimate: function(){
+            var slider = document.getElementById('flashLightButton');
+            if(slider.value < 5){
+                console.log("ANIMATE VALUE: "+slider.value+" MOVE: "+0);
+                app.flashLightButtonSliderMoveTo(0);
+            } else {
+                console.log("ANIMATE VALUE: "+slider.value+" MOVE: "+10);
+                app.flashLightButtonSliderMoveTo(10);
+            }
+        },
+        flashLightButtonSliderMoveTo: function(value){
+            if(app.flashLightButton.stopAllAnimations) return;
+            var slider = document.getElementById('flashLightButton');
+            console.log("VALUE "+slider.value+" MOVE TO "+value);
+            if(slider.value != value){
+                if(slider.value > value){
+                    console.log("DECREASE VALUE");
+                    slider.value -= 0.2;
+                    setTimeout(function(){app.flashLightButtonSliderMoveTo(value )}, 10);
+                }
+                if(slider.value < value){
+                    console.log("INCREASE VALUE: OLD: "+slider.value+" ADD: "+0.2+" RESULT: "+(slider.value + 0.2));
+
+                    slider.value += 0.2;
+
+                    console.log("INCREASED VALUE:"+slider.value);
+                    setTimeout(function(){app.flashLightButtonSliderMoveTo(value )}, 1000);
+                }
+
+            }
         },
         flashLightButtonAnimate: function(scrollTo, callback){
             var wrapper = app.dom7('.flashlight-button-wrapper');
@@ -551,12 +743,7 @@
         },
 
         pageMorseListInit: function(page){
-
             app.morseItemsBuild();
-
-
-
-
         },
         morseSaveItem: function(){
             if(app.morseItemId > -1){
@@ -564,17 +751,61 @@
             } else {
                 app.morseItemSave(document.getElementById('text').value);
             }
+        },
+
+        batteryInit: function(){
+            if(app.JSAPI.getBatteryLevel){
+                //app.batteryLevel = app.JSAPI.getBatteryLevel() || 0;
+            }
+            app.batteryCalculate();
+            if(app.JSAPI.startBatteryLevelChangedListen) {
+                app.JSAPI.startBatteryLevelChangedListen();
+            }
+            window.addEventListener('batteryLevelChangedEvent', function(){
+                app.batteryLevel = getBufferEventVar().batteryLevel;
+                app.batteryCalculate();
+            });
+        },
+        batteryCalculate: function(){
+            var minutes = app.batteryLevel / app.batteryUseInMin;
+            app.dom7('.battery').text(minutes+'min');
+        },
+        flashLightLevelSliderInit: function(){
+
+        },
+        setFlashLightLevel: function(value){
+            app.settingsSet('flashLightLevel', value);
+            app.JSAPI.flashLightLevel(value);
+        },
+        settingsLoad: function(){
+            var db = app.getLocalDB();
+            var settings = db.settings || app.settingsDefault;
+            app.settings = settings;
+        },
+        settingsSave: function(){
+            var db = app.getLocalDB();
+            db.settings = app.settings;
+            app.setLocalDB(db);
+        },
+        settingsSet: function(param, value){
+            app.settings[param] = value;
+            app.settingsSave();
+        },
+        settingsApply: function(){
+            if(app.JSAPI.flashLightLevel){
+                app.JSAPI.flashLightLevel(app.settings.flashLightLevel);
+            }
+
+            if(app.JSAPI.setScreenBrightness){
+                app.JSAPI.setScreenBrightness(app.settings.displayBrightness);
+            }
+        },
+        screenBrightnessSliderInit: function(){
+
+        },
+        setScreenBrightness: function(value){
+            app.settingsSet('displayBrightness', value);
+            app.JSAPI.setScreenBrightness(value);
         }
     };
     document.addEventListener('DOMContentLoaded', app.init);
-
-
-/*function showData(feet, accuracy) {
-    //header.innerText = "Current altitude:";
-    //error.innerText = "";
-    var accuracyString = (typeof accuracy === 'number') ? (' +/-' + (+(accuracy).toFixed(0)).toLocaleString() + ' ft') : '';
-    app.dom7('.altimeter').text(round(+feet, +accuracy) + ' ft');
-    console.log(round(+feet, +accuracy) + ' ft');
-    //console.log(accuracyString);
-}*/
-//})();

@@ -1,5 +1,4 @@
 .page-content {
-    padding: 30px;
     padding-top: 50px;
 }
 
@@ -177,8 +176,34 @@ and (orientation: portrait) {
 
 .playbutton {
     background-color:green;
+    height: 50px;
 }
 
 .stop {
     background-color: red;
+}
+.slider2 {
+    position: relative;
+    height: 20px;
+}
+.slider2-wrapper {
+    position: absolute;
+    width:200px;
+    height: 20px;
+    background-color: red;
+}
+
+.slider2-button {
+    width:20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: black;
+    position: absolute;
+    left:0;
+    transition-property: left;
+    transition-duration: 0.5s;
+}
+
+.list-block .item-title.label {
+    width:45% !important;
 }
