@@ -22,6 +22,7 @@
         batteryLevel:100,//0..100
         batteryUseInMin:0.05,
         screenBrightnessBeforeLaunch:-1,
+        html5sounds:false,//если true звуки будут воспроизводиться через html5
         settings: {
             flashLightLevel:0.5,
             playSounds: false,
@@ -175,8 +176,9 @@
             app.compass();
             app.GPSInit();
             app.batteryInit();
-            app.flashlightButtonInit();
-            app.flashLightLevelSliderInit();
+            app.pageIndexInit();
+            //app.flashlightButtonInit();//TODO deprecated, delete
+            //app.flashLightLevelSliderInit();
 
             app.f7.onPageInit('morse', function(page){
                 app.pageMorseInit(page);
@@ -190,16 +192,15 @@
                 app.pageSettingsInit();
             });
 
-            /*app.dom7('#test').on('change', function(){
-                console.log("SLIDER");
+            app.f7.onPageInit('*', function(page){
+                if(page.page != 'index'){
+                    clearInterval(app.pageIndexFlashLightLevelInterval);
+                }
             });
-            document.getElementById('test').addEventListener('change', function(){
-                console.log("test");
-            })*/
-
-
 
         },
+        //метод вызывается при закрытии приложения
+        //TODO no JSAPI method
         destroy: function(){
             //restore screen brightness
             if(app.settings.restoreScreenBrightness){
@@ -209,6 +210,7 @@
         /**
          * функция показа банера (в фри версии)
          * вызывается при инициализации каждой страницы
+         * только для iOS
          */
         ad: function(){
             if(app.free && app.platform != 'android') {
@@ -260,6 +262,40 @@
             app.dom7('#settings-flashlight-brightness').prop('value', app.settings.flashLightLevel);
 
             app.settings_sliders_interval = setInterval(app.pageSettingsSlidersCheck, 500);
+        },
+
+        pageIndexFlashLightLevelInterval:0,
+
+        pageIndexInit: function(){
+            app.dom7('#sliderFlashLightLevel').prop('value', app.settings.flashLightLevel);
+            app.dom7('#sliderDisplayBrightness').prop('value', app.settings.displayBrightness);
+            app.pageIndexFlashLightLevelInterval = setInterval(app.pageIndexSlidersCheck, 500);
+            app.dom7('#flashLightButton').click(function(){
+                if(app.flashLightEnabled){
+                    app.flashLightOff();
+                    app.flashLightEnabled = false;
+                } else {
+                    app.flashLightEnabled = true;
+                    app.flashLightOn();
+                }
+            });
+
+            app.dom7('.popup-test').click(function(){
+                app.openPopup();
+            });
+
+            app.openPopup();
+        },
+        pageIndexSlidersCheck: function(){
+            var flashLightLevel = app.dom7('#sliderFlashLightLevel').prop('value');
+            if(flashLightLevel != app.settings.flashLightLevel){
+                app.setFlashLightLevel(flashLightLevel);
+            }
+
+            var displayBrightness = app.dom7('#sliderDisplayBrightness').prop('value');
+            if(displayBrightness != app.settings.displayBrightness){
+                app.setDisplayBrightness(displayBrightness);
+            }
         },
         //framework7 range element not support good onchange method
         pageSettingsSlidersCheck: function(){
@@ -360,12 +396,25 @@
         },
         morseDotSound: function(){
             if(!app.soundEnable) return;
+            if(app.html5sounds){
+                 var audio = document.createElement('audio');
+                 audio.src = app.morse.sound.dot;
+                 audio.play();
+                return;
+            }
             var snd = new Sound(app.morse.sound.dot);
             snd.volume(app.soundVolume);
             snd.play();
         },
         morseDashSound: function(){
             if(!app.soundEnable) return;
+
+            if(app.html5sounds){
+                var audio = document.createElement('audio');
+                audio.src = app.morse.sound.dash;
+                audio.play();
+                return;
+            }
             var snd = new Sound(app.morse.sound.dash);
             snd.volume(app.soundVolume);
             snd.play();
@@ -389,7 +438,11 @@
          * @param position
          */
         morsePlay: function(morse, position_morse, text, position){
-
+            if(app.settings.flashLightLevel == 0 || app.settings.flashLightLevel == undefined){
+                //фонарик не работает если уровень яркости подсветки = 0
+                //TODO #laterDefinition
+                app.setFlashLightLevel(0.1);
+            }
             if(app.playbackStop){
                 app.playbackStop = false;
                 return;
@@ -434,7 +487,15 @@
             }, duration);
         },
 
+        /**
+         * Воспроизводит текст в виде кода Морзе
+         * @param text
+         * @param position - символ с которого начинается воспроизведение
+         */
         morseText: function(text, position){
+            if(position == undefined){
+                position = 0;
+            }
             if(app.playbackStop){
                 app.playbackStop = false;
                 return;
@@ -589,6 +650,7 @@
             });
 
             var checkSliderValue = function(){
+                return false;//TODO delete this function
                 var slider_value = document.getElementById('flashLightButton').value;
                 if(app.flashLightButton._value != slider_value) {
                     app.flashLightButtonChange(slider_value);
@@ -687,8 +749,9 @@
         morseItemId:-1,
 
         pageMorseInit: function(page){
-            var item_text = '';
-            if(!page.query.id) {
+            var text = document.getElementById('text');
+            var item_text = text.value || '';
+            if(page == undefined || !page.query.id) {
                 app.morseItemId = -1;
             } else {
                 app.morseItemId = page.query.id;
@@ -699,11 +762,7 @@
                 app.play();
             });
 
-            app.dom7('#stop').on('click', function(){
-                app.stop();
-            });
 
-            var text = document.getElementById('text');
             text.value = item_text;
              text.addEventListener('input', function(){
                  app.renderMorse(text.value);
@@ -711,6 +770,22 @@
             app.renderMorse(text.value);
             app.dom7('.save').on('click', function(){
                 app.morseSaveItem();
+            });
+
+            app.dom7('.morse-button-sound').click(function(){
+                if(app.settings.playSoundsMorse){
+                    app.settingsSet('playSoundMorse', false);
+                } else {
+                    app.settingsSet('playSoundMorse', true);
+                }
+            });
+
+            app.dom7('.morse-button-screen').click(function(){
+                if(app.settings.playSoundsMorse){
+                    app.settingsSet('displayFlash', false);
+                } else {
+                    app.settingsSet('displayFlash', true);
+                }
             });
         },
 
@@ -770,12 +845,13 @@
             var minutes = app.batteryLevel / app.batteryUseInMin;
             app.dom7('.battery').text(minutes+'min');
         },
-        flashLightLevelSliderInit: function(){
-
-        },
         setFlashLightLevel: function(value){
             app.settingsSet('flashLightLevel', value);
             app.JSAPI.flashLightLevel(value);
+        },
+        setDisplayBrightness: function(value){
+            app.settingsSet('displayBrightness', value);
+            app.JSAPI.setScreenBrightness(value);
         },
         settingsLoad: function(){
             var db = app.getLocalDB();
@@ -806,6 +882,28 @@
         setScreenBrightness: function(value){
             app.settingsSet('displayBrightness', value);
             app.JSAPI.setScreenBrightness(value);
+        },
+        openPopup: function(){
+            var modal = app.dom7('.modal-custom');
+            app.dom7('.page-content').addClass('blur');
+            app.f7.get("morse2.html", {}, {}, function(data){
+                app.dom7('.modal-content').html(data);
+                //modal.css('margin-top', '-'+modal.height()/2+'px');
+                app.pageMorseInit();
+
+                app.dom7('.modal-custom-close').click(function(){
+                    app.closePopup();
+                });
+            });
+            modal.css('display', 'block');
+            app.dom7('.modal-overlay').addClass('modal-overlay-visible');
+
+
+        },
+        closePopup: function(){
+            app.dom7('.modal-custom').css('display', 'none');
+            app.dom7('.modal-overlay').removeClass('modal-overlay-visible');
+            app.dom7('.page-content').removeClass('blur');
         }
     };
     document.addEventListener('DOMContentLoaded', app.init);

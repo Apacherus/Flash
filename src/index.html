@@ -28,11 +28,18 @@
                         <div class="compass"></div>
                     </div>
 
+                    <div class="button" id="flashLightButton" style="height: 50px;">TURN LIGHT</div>
+
                     <div class="item-input">
                         <div class="range-slider">
-                            <input id="flashLightButton" type="range" min="0" max="10" step="0.1" value="0">
+                            <input id="sliderFlashLightLevel" type="range" min="0" max="1" step="0.005" value="0">
                         </div>
-                        <div class="slider-value">zz</div>
+                    </div>
+
+                    <div class="item-input">
+                        <div class="range-slider">
+                            <input id="sliderDisplayBrightness" type="range" min="0" max="1" step="0.005" value="0">
+                        </div>
                     </div>
 
                     <div class="slider2">
@@ -45,18 +52,12 @@
                     <div class="gps-position"></div>
                     <div class="battery">BATTERY</div>
 
-                    <a class="flashlight-button-wrapper" href="#">
-                        <div class="flashlight-button">
-                            <div class="green">
-                                <div class="indicator"></div>
-                            </div>
-                            <div class="red"></div>
-                        </div>
-                    </a>
-                    <div class="flashlight off"></div>
-                    <a href="morse_list.html" class="link">LIST</a>
-                    <a href="settings.html" class="link">SETTINGS</a>
-                    <a href="#" class="link">MORSE</a>
+
+                    <a href="morse_list.html" class="button">LIST</a>
+                    <a href="settings.html" class="button">SETTINGS</a>
+                    <a href="#" class="button popup-test">MORSE</a>
+
+
                 </div>
 
             </div>
@@ -65,6 +66,12 @@
 
     </div>
 </div>
+
+<div class="modal-custom">
+        <div class="modal-content"></div>
+
+</div>
+<div class="modal-overlay"></div>
 <script src="js/framework7.min.js"></script>
 <script src="js/react.js"></script>
 <script src="js/webactivity.js"></script>

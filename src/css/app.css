@@ -44,18 +44,15 @@ and (orientation: portrait) {
 
 }
 
-.morse-text {
-    width:95%;
-    height: 100px;
-    font-size: 30px;
-}
 
 .morse-code {
-    font-size: 80px;
-    width:10000px;
+    font-size: 70px;
     position: absolute;
     transition-property: left;
-    transition-duration: 0.4s;
+    transition-duration: 1.5s;
+    text-align:left;
+    width:100000px;
+    color: #a9a9a9;
 }
 
 .morse-symbol {
@@ -64,6 +61,8 @@ and (orientation: portrait) {
     padding: 5px;
     min-width: 5px;
     min-height: 5px;
+    transition: color 1.0s, text-shadow 0.3s, transform 1.0s;
+    transform: translateY(0px) scale(0.9, 0.9);
 }
 
 .morse-code-wrapper {
@@ -74,7 +73,9 @@ and (orientation: portrait) {
 }
 
 .morse-symbol-active {
-    color:red;
+    color: #ff9089;
+    text-shadow: 1px 1px 4px rgba(255, 10, 0, 0.58), -1px -1px 4px rgba(255, 10, 0, 0.41), 0px 0px 10px #ff8670;
+    transform: translateY(-5px) scale(1.4, 1.4);
 }
 
 .compass-wrapper {
@@ -206,4 +207,112 @@ and (orientation: portrait) {
 
 .list-block .item-title.label {
     width:45% !important;
+}
+
+.blur {
+    filter:blur(5px);
+    -webkit-filter:blur(5px);
+}
+
+.modal-custom {
+    display: none;
+    width:100%;
+    height: 100%;
+    position: absolute;
+    top:0;
+    left:0;
+    z-index:11000;
+}
+
+.modal-custom-close {
+    width:40px;
+    height: 40px;
+    position: absolute;
+    right:-20px;
+    top:-20px;
+    background-color: red;
+}
+
+.morse-wrapper{
+    padding-top: 50px;
+    width:80%;
+    margin:0 auto;
+}
+
+.morse-modal {
+    background-color: #464646;
+    padding: 20px;
+    border:2px solid black;
+    border-radius:10px;
+    position: relative;
+}
+
+.morse-modal textarea {
+    color:white;
+    background-color:#464646;
+    border:none;
+    border-bottom: 1px solid black;
+    font-size:20px;
+    font-weight: 100;
+    font-family: 'Helvetica Neue';
+    width:100%;
+    text-align: center;
+    height: 40px;
+    margin-top:20px;
+}
+
+.morse-modal .modal-bottom-buttons {
+    position: absolute;
+    bottom: -20px;
+    margin-left:-20px;/* fix wrapper padding */
+    height: 40px;
+    width:100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.modal-bottom-button {
+    width:40px;
+    height: 40px;
+    border:2px solid black;
+    border-radius: 50%;
+    background-color:#464646;
+    margin-left:10px;
+    margin-right: 10px;
+    flex:0 0 auto;
+}
+
+.bottom-buttons {
+    margin-top:50px;
+    width:100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.bottom-button {
+    flex:0 0 auto;
+    width:40px;
+    height: 40px;
+    border:2px solid white;
+    border-radius: 50%;
+    margin-left:10px;
+    margin-right: 10px;
+}
+
+.button-on {
+    width:100px;
+    height: 100px;
+    border:1px solid white;
+    border-radius: 50%;
+    background-color: rgba(127, 127, 127, 0.5);
+    margin: 0 auto;
+    margin-top:25px;
+}
+
+.morse-modal-title {
+    text-align: center;
+    font-size: 20px;
+    color: #aeaeae;
 }
