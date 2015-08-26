@@ -22,7 +22,7 @@
         batteryLevel:100,//0..100
         batteryUseInMin:0.05,
         screenBrightnessBeforeLaunch:-1,
-        html5sounds:false,//если true звуки будут воспроизводиться через html5
+        html5sounds:false,//если true - звуки будут воспроизводиться через html5
         settings: {
             flashLightLevel:0.5,
             playSounds: false,
@@ -164,7 +164,7 @@
             JSAPI.keepScreenOn();
 
             app.loadingStart();
-            app.settingsApply();
+            setTimeout(function(){app.settingsApply();}, 100);
 
             app.dom7('#turnOn').on('click', function(){
                 app.flashLightOn();
@@ -173,8 +173,9 @@
                 app.flashLightOff();
             });
 
-            app.compass();
+
             app.GPSInit();
+            app.compass();
             app.batteryInit();
             app.pageIndexInit();
             //app.flashlightButtonInit();//TODO deprecated, delete
@@ -267,26 +268,58 @@
         pageIndexFlashLightLevelInterval:0,
 
         pageIndexInit: function(){
+
+            app.compassRotate(0);
+
             app.dom7('#sliderFlashLightLevel').prop('value', app.settings.flashLightLevel);
             app.dom7('#sliderDisplayBrightness').prop('value', app.settings.displayBrightness);
             app.pageIndexFlashLightLevelInterval = setInterval(app.pageIndexSlidersCheck, 500);
-            app.dom7('#flashLightButton').click(function(){
+            var flashLightbtn = app.dom7('#flashLightButton');
+            flashLightbtn.click(function(){
                 if(app.flashLightEnabled){
                     app.flashLightOff();
                     app.flashLightEnabled = false;
+                    flashLightbtn.css('color', 'rgba(255, 255, 255, 0)');
+                    setTimeout(function(){
+                        flashLightbtn.text('On');
+                        flashLightbtn.css('color', 'rgba(255, 255, 255, 1)');
+                    }, 350);
+
+                    flashLightbtn.removeClass('on');
+
                 } else {
                     app.flashLightEnabled = true;
                     app.flashLightOn();
+                    flashLightbtn.css('color', 'rgba(255, 255, 255, 0)');
+                    setTimeout(function(){
+                        flashLightbtn.text('Off');
+                        flashLightbtn.css('color', 'rgba(255, 255, 255, 1)');
+                    }, 350);
+                    flashLightbtn.addClass('on');
                 }
+                app.playSound('data/sound/switcher.mp3');
+
+
             });
 
             app.dom7('.popup-test').click(function(){
                 app.openPopup();
             });
 
-            app.openPopup();
+            app.dom7('.button-item').click(function(e){
+                var btn = app.dom7(e.target);
+                if(btn.hasClass('on')){
+                    app.dom7('.button-item').removeClass('on');
+                } else {
+                    app.dom7('.button-item').removeClass('on');
+                    btn.addClass('on');
+                }
+            });
+
+           // app.openPopup();
         },
         pageIndexSlidersCheck: function(){
+            return;//todo
             var flashLightLevel = app.dom7('#sliderFlashLightLevel').prop('value');
             if(flashLightLevel != app.settings.flashLightLevel){
                 app.setFlashLightLevel(flashLightLevel);
@@ -395,31 +428,29 @@
             app.flashLightForTime(app.morse.duration.dash);
         },
         morseDotSound: function(){
-            if(!app.soundEnable) return;
-            if(app.html5sounds){
-                 var audio = document.createElement('audio');
-                 audio.src = app.morse.sound.dot;
-                 audio.play();
-                return;
-            }
-            var snd = new Sound(app.morse.sound.dot);
-            snd.volume(app.soundVolume);
-            snd.play();
+            if(!app.settings.playSoundsMorse) return;
+
+            app.playSound(app.morse.sound.dot);
         },
         morseDashSound: function(){
-            if(!app.soundEnable) return;
+            if(!app.settings.playSoundsMorse) return;
+            app.playSound(app.morse.sound.dash);
+        },
+
+        playSound: function(path){
+            if(!app.settings.playSounds) return;
 
             if(app.html5sounds){
                 var audio = document.createElement('audio');
-                audio.src = app.morse.sound.dash;
+                audio.src = path;
                 audio.play();
                 return;
             }
-            var snd = new Sound(app.morse.sound.dash);
-            snd.volume(app.soundVolume);
+            var snd = new Sound(path);
+            snd.volume(app.settings.soundVolume);
             snd.play();
-
         },
+
         char2Morse: function(char){
             return app.morse.convert[char.toLowerCase()];
         },
@@ -539,15 +570,17 @@
             app.playbackMode = 0;
         },
 
+
         compass: function(){
 
-            var rotate = function (deg) {
-                app.dom7(".compass").css({ "transform": "rotate(0deg)"});
-                app.dom7(".compass").css({ "transform": "rotate(" + deg + "deg)"});
+            /*var rotate = function (deg) {
+                //app.dom7(".compass").css({ "transform": "rotate(0deg)"});
+                //app.dom7(".compass").css({ "transform": "rotate(" + deg + "deg)"});
+                app.dom7(".compass-bg").css({ "background-position-x":  deg + "px"});
             };
 
             if (app.JSAPI.listenMagneticField) {
-                console.log("Use JSAPI magneticField");
+                console.log("COMPASS: Use JSAPI magneticField");
                 app.JSAPI.listenMagneticField(2000);
                 JSAPI.log("LISTEN");
 
@@ -559,16 +592,73 @@
             } else {
                 JSAPI.log("LISTEN2");
                 if (window.DeviceOrientationEvent) {//html5
-                    console.log("Use html5 device orientation");
+                    console.log("COMPASS: Use html5 device orientation");
                     window.addEventListener("deviceorientation", function (e) {
                         rotate(360 - e.alpha);
                     }, false);
                 } else {
                     console.log("No available methods for get magnetic field information! Your device realy support it?");
                 }
+            }*/
+
+            app.JSAPI.log("COMPAS INIT");
+
+            window.addEventListener('magneticHeadingEvent', function(){
+                app.compassRotate(getBufferEventVar().magneticHeading);
+            });
+
+
+        },
+
+        compassOldRotate:0,
+        compassRotate: function(deg){
+
+           /* if(app.compassOldRotate != deg){
+                var x = deg - app.compassOldRotate;
+                app.compassOldRotate += x;
+            } else {
+                return;
+            }*/
+            var deg_new = deg;
+            if(deg >= 355 && deg <= 360){
+                app.dom7('.compass-bg').css('transition-duration', '0s');
+                deg_new = deg - 360;
+            } else {
+                app.dom7('.compass-bg').css('transition-duration', '0.5s');
             }
+            if((deg > 180 && deg < 355) && app.compassOldRotate >= 355) {
+                console.log("AAAAAA");
+                app.dom7('.compass-bg').css('transition-duration', '0s');
+            }
+            var screenWidth = app.dom7(window).width();
 
+            /**
+             * расчет позиции фона с рисками
+             * width/2 - учитываем что отметки должны быть в центре экрана, и сдвигаем фон
+             * ppd - pixels per degree, 1 риска это 3 градуса, на фоне 3 градуса (расстояние между рисками)
+             * составляет 5px, учитывая ширину самих рисок (2px) получаем 7px/3deg = 2.33
+             */
+            var ppd = 7/3;
+            //iPhone 5 - 521
+            //iPhone 6 - 466
+            //iPhone 6s - 427
+            //iPad - 913
+            var magic = 521-Math.abs(screenWidth-320);
+            var position = magic + screenWidth/2+(deg_new*ppd);
+            /*
+            if(deg >= 350 && deg <= 360){
+                app.dom7('.compass-bg').css('transition-duration', '0s');
+            } else if(deg >= 0 && deg <= 10) {
+                app.dom7('.compass-bg').css('transition-duration', '0s');
+            } else {
+                app.dom7('.compass-bg').css('transition-duration', '0.5s');
+            }*/
 
+            app.dom7('.compass-debug').text(deg);
+            var markPosition = screenWidth/2 - 1;//2 - width of mark, 2/2 = 1
+            app.dom7('.compass-mark').css('left', markPosition + 'px');
+            app.dom7(".compass-bg").css({ "background-position-x":  '-'+position + "px"});
+            app.compassOldRotate = deg;
         },
 
         GPSInit: function(){
@@ -587,11 +677,9 @@
         GPSWatch: function(position){
             app.dom7('.gps-position').text('Lat: '+position.coords.latitude+' Long: '+position.coords.longitude);
 
-            var altitude = position.coords.altitude;
-            if(altitude == null) {
-                altitude = 0;
-            }
-            app.dom7('.altitude').text(altitude+'m');
+            app.dom7('.info-latitude .text').text(position.coords.latitude.toFixed(2));
+            app.dom7('.info-longitude .text').text(position.coords.longitude.toFixed(2));
+            app.dom7('.info-altimeter .text').text(position.coords.altitude.toFixed(1)+'m');
 
         },
 

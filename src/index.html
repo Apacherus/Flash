@@ -24,38 +24,61 @@
             <div data-page="index" class="page">
                 <div class="page-content">
                     <div class="compass-wrapper">
-                        <div class="compass-bg"></div>
-                        <div class="compass"></div>
+                        <div class="compass-mark"></div>
+                        <div class="compass-bg">
+                        </div>
+
                     </div>
+                    <div class="compass-debug">222</div>
 
-                    <div class="button" id="flashLightButton" style="height: 50px;">TURN LIGHT</div>
-
-                    <div class="item-input">
-                        <div class="range-slider">
-                            <input id="sliderFlashLightLevel" type="range" min="0" max="1" step="0.005" value="0">
+                    <div class="information-wrapper">
+                        <div class="info-gps">
+                            <div class="info-latitude">
+                                <div class="text">123.34</div>
+                                <div class="info-title">Latitude</div>
+                            </div>
+                            <div class="info-longitude">
+                                <div class="text">123.34</div>
+                                <div class="info-title">Longitude</div>
+                            </div>
+                        </div>
+                        <div class="info-bottom">
+                            <div class="info-battery">
+                                2h 35m
+                                <div class="info-title">Battery</div>
+                            </div>
+                            <div class="info-altimeter">
+                                <div class="text">123.34</div>
+                                <div class="info-title">Height</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="buttons-wrapper">
+                        <div class="button-item button-stroboscope x">
+                            <div class="button-text">Stroboscope</div>
+                        </div>
+                        <div class="button-item button-stroboscope">
+                            <div class="button-text">Screen</div>
+                        </div>
+                        <div class="button-item button-stroboscope">
+                            <div class="button-text">Light</div>
+                        </div>
+                        <div class="button-item button-stroboscope">
+                            <div class="button-text">Morse</div>
+                        </div>
+                        <div class="button-item button-stroboscope">
+                            <div class="button-text">SOS</div>
+                        </div>
+                    </div>
+                    <div class="flashlight-wrapper">
+                        <div class="flashlight-button-outline">
+                            <div class="flashlight-button-inner" id="flashLightButton">
+                                On
+                            </div>
                         </div>
                     </div>
 
-                    <div class="item-input">
-                        <div class="range-slider">
-                            <input id="sliderDisplayBrightness" type="range" min="0" max="1" step="0.005" value="0">
-                        </div>
-                    </div>
 
-                    <div class="slider2">
-                        <div class="slider2-wrapper"></div>
-                        <div class="slider2-button"></div>
-                    </div>
-
-                    <div class="altitude"></div>
-
-                    <div class="gps-position"></div>
-                    <div class="battery">BATTERY</div>
-
-
-                    <a href="morse_list.html" class="button">LIST</a>
-                    <a href="settings.html" class="button">SETTINGS</a>
-                    <a href="#" class="button popup-test">MORSE</a>
 
 
                 </div>
