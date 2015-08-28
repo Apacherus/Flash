@@ -25,6 +25,7 @@
         screenBrightnessBeforeLaunch:-1,
         html5sounds:false,//если true - звуки будут воспроизводиться через html5
         flashLight:false,//фонарик доступен(есть в устройстве и т.п.)
+        flashLightButtonSound:null,
         settings: {
             flashLightLevel:0.5,
             playSounds: false,
@@ -58,8 +59,10 @@
         morse:{
             playSound:true,
             sound: {
-                dot:"data/sound/100.wav",
-                dash:"data/sound/200.wav"
+                dot:"data/sound/morze-100.mp3",
+                dotH:null,
+                dash:"data/sound/morze-300.mp3",
+                dashH:null
             },
             duration:{
                 dot:50,
@@ -242,8 +245,9 @@
             }
         },
         /**
-         * вызывается при восстановлении приложения
+         * - вызывается при восстановлении приложения
          * (если было скрыто)
+         * - вызывается при запуске приложения
          */
         onrestore: function(){
             app.log("ON RESTORE!");
@@ -296,6 +300,7 @@
         },
 
         closeSettings: function(){
+            clearInterval(app.settings_sliders_interval);
             app.f7.closeModal('.popup-settings');
             app.dom7('.left').html('<a href="#" class="settings-open"><i class="icon icon-settings"></i></a>');
             app.dom7('.settings-open').click(function(){
@@ -353,6 +358,9 @@
             app.pageIndexFlashLightLevelInterval = setInterval(app.pageIndexSlidersCheck, 500);
             var flashLightbtn = app.dom7('#flashLightButton');
             flashLightbtn.click(function(){
+                if(app.stroboscopeEnabled) {
+                    app.stroboscopeToggle();
+                }
                 if(app.flashLightEnabled){
                     app.flashLightOff();
                     app.flashLightEnabled = false;
@@ -374,30 +382,103 @@
                     }, 350);
                     flashLightbtn.addClass('on');
                 }
-                app.playSound('data/sound/switcher.mp3');
+                if(app.settings.playSounds){
+                    app.flashLightButtonSound.volume(app.settings.soundVolume);
+                    app.flashLightButtonSound.play();
+                }
 
 
             });
 
-            app.dom7('.button-item').click(function(e){
+            /*app.dom7('.button-item').click(function(e){
                 var btn = app.dom7(e.target);
                 if(btn.hasClass('on')){
                     app.dom7('.button-item').removeClass('on');
+                    app.dom7('.button-text').removeClass('on');
                 } else {
                     app.dom7('.button-item').removeClass('on');
+                    app.dom7('.button-text').removeClass('on');
                     btn.addClass('on');
+                    var p = btn.dataset().btn;
+                    app.dom7('.button-item-wrapper.'+p+' .button-text').addClass('on');
                 }
-            });
+            });*/
+
 
             app.dom7('.settings-open').click(function(){
                app.openSettings();
             });
 
             app.dom7('#bottomButtonMorse').click(function(){
+                app.switchButtonAllOff();
+                app.switchButtonOn('morse');
+                app.stroboscopeStop();
+                app.openPopup();
+
+            });
+
+            app.dom7('.button-screen').click(function(){
+                app.switchButtonAllOff();
+                app.switchButtonOn('screen');
+                app.stroboscopeStop();
+                app.screenFlashlightOpen();
+            });
+
+            app.dom7('.button-sos').click(function(){
+                app.switchButtonAllOff();
+                app.switchButtonOn('sos');
+                app.stroboscopeStop();
+                app.morseSOS();
                 app.openPopup();
             });
 
-           // app.openPopup();
+            app.dom7('.button-stroboscope').click(function(){
+                app.switchButtonAllOff();
+                app.switchButtonOn('stroboscope');
+                app.stroboscopeToggle();
+            });
+
+
+            /**
+             * часть звуков не проигрывается если их не инициализировать
+             * TODO: fix sound
+             */
+           app.initSounds();
+        },
+
+        switchButtonOn: function(p){
+            var btn = app.dom7('.button-item.button-'+p);
+            var text  = app.dom7('.button-item-wrapper.'+p+' .button-text');
+
+            btn.addClass('on');
+            text.addClass('on');
+        },
+
+        switchButtonOff: function(p){
+            var btn = app.dom7('.button-item.button-'+p);
+            var text  = app.dom7('.button-item-wrapper.'+p+' .button-text');
+
+            btn.removeClass('on');
+            text.removeClass('on');
+        },
+
+        switchButtonAllOff: function(){
+            app.dom7('.button-item').removeClass('on');
+            app.dom7('.button-text').removeClass('on');
+        },
+
+        initSounds: function(){
+            app.flashLightButtonSound = new Sound("data/sound/switcher.mp3");
+            app.flashLightButtonSound.volume(0);
+            app.flashLightButtonSound.play();
+
+            app.morse.sound.dotH = new Sound(app.morse.sound.dot);
+            app.morse.sound.dotH.volume(0);
+            app.morse.sound.dotH.play();
+
+            app.morse.sound.dashH = new Sound(app.morse.sound.dash);
+            app.morse.sound.dashH.volume(0);
+            app.morse.sound.dashH.play();
         },
         pageIndexSlidersCheck: function(){
             return;//todo
@@ -502,20 +583,31 @@
                 }
             }, time);
         },
+        screenFlashForTime: function(time){
+            app.screenFlashLightOn();
+            setTimeout(app.screenFlashLightOff, time);
+        },
         morseDot: function(){
             app.flashLightForTime(app.morse.duration.dot);
+            if(app.settings.displayFlash){
+                app.screenFlashForTime(app.morse.duration.dot);
+            }
         },
         morseDash: function(){
             app.flashLightForTime(app.morse.duration.dash);
+            if(app.settings.displayFlash){
+                app.screenFlashForTime(app.morse.duration.dash);
+            }
         },
         morseDotSound: function(){
-            if(!app.settings.playSoundsMorse) return;
-
-            app.playSound(app.morse.sound.dot);
+            if(!app.settings.playSoundsMorse || !app.settings.playSounds) return;
+            app.morse.sound.dotH.volume(app.settings.soundVolume);
+            app.morse.sound.dotH.play();
         },
         morseDashSound: function(){
-            if(!app.settings.playSoundsMorse) return;
-            app.playSound(app.morse.sound.dash);
+            if(!app.settings.playSoundsMorse || !app.settings.playSounds) return;
+            app.morse.sound.dashH.volume(app.settings.soundVolume);
+            app.morse.sound.dashH.play();
         },
 
         playSound: function(path){
@@ -571,6 +663,10 @@
                 return;
             }
 
+            if(app.settings.displayFlash && app.dom7('.screen-flashlight').css('display') == 'none'){
+                app.screenFlashlightOpen();
+            }
+
             console.log("MORSE: "+morse[position_morse]);
             var duration = 0;
            // var sound_src = "";
@@ -586,6 +682,9 @@
             }
 
             app.flashLightForTime(duration);
+            if(app.settings.displayFlash){
+                app.screenFlashForTime(duration);
+            }
 
             duration = duration + app.morse.duration.spaceBetweenSymbols;
            /* if(app.morse.playSound) {
@@ -615,16 +714,23 @@
             app.dom7('.morse-symbol-active').removeClass('morse-symbol-active');
             if(position == 0){
                 console.log("START TEXT: "+text+" MORSE: "+app.string2Morse(text));
+                if(app.settings.displayFlash){
+                    app.screenFlashlightOpen();
+                }
             }
             if(position >= text.length) {
                 var code = app.dom7('.morse-code');
                 code.css('transform', 'translateX(0px)');
                 code.css('-webkit-transform', 'translateX(0px)');//iOS Webkit don't support transform
                 console.log("END OF TEXT");
-                if(app.dom7('#cb_loop').prop('checked')){
+
+                if(true){//loop
                     app.morseText(text, 0);
                 } else {
                     app.stop();
+                    if(app.settings.displayFlash){
+                        app.screenFlashlightClose();
+                    }
                 }
                 return;
             }
@@ -639,7 +745,18 @@
             app.morsePlay(morse, 0, text, position);
         },
 
+        morseBottomButtonToggle: function(e){
+            var btn = app.dom7(e.target);
+            if(btn.hasClass('on')){
+                btn.removeClass('on');
+            } else {
+                btn.addClass('on');
+            }
+        },
+
         play: function(){
+            if(!app.dom7('#text').prop('value').length) return;
+            app.dom7('#text').prop('disabled', 'true');
             if(app.playbackMode == 0){
                 app.dom7('#play').addClass('stop');
                 app.playbackMode = 1;
@@ -648,13 +765,26 @@
             } else {
                 app.stop();
             }
+
+            if(app.settings.playSounds){
+                app.flashLightButtonSound.volume(app.settings.soundVolume);
+                app.flashLightButtonSound.play();
+            }
         },
         stop: function(){
+            app.dom7('#text').removeAttr('disabled');
             app.dom7('#play').removeClass('stop');
             app.playbackStop = true;
             app.playbackMode = 0;
+            if(app.settings.playSounds){
+                app.flashLightButtonSound.volume(app.settings.soundVolume);
+                app.flashLightButtonSound.play();
+            }
         },
-
+        morseModeSOS:false,
+        morseSOS: function(){
+            app.morseModeSOS = true;
+        },
 
         compass: function(){
 
@@ -933,28 +1063,78 @@
              text.addEventListener('input', function(){
                  app.renderMorse(text.value);
              });
-            app.renderMorse(text.value);
+            if(app.morseModeSOS){
+                text.value = "SOS";
+                app.morseModeSOS = false;
+                app.renderMorse(text.value);
+                app.play();
+            } else if(page == undefined) {
+                text.value = "";
+                app.renderMorse(text.value);
+            } else {
+                app.renderMorse(text.value);
+            }
+
             app.dom7('.save').on('click', function(){
                 if(app.morseIconSaveBlock) return;
                 app.morseSaveItem();
                 app.morseIconSaveAnimation();
             });
 
-            app.dom7('.morse-button-sound').click(function(){
+            var btn_sound = app.dom7('.morse-button-sound');
+            btn_sound.click(function(){
                 if(app.settings.playSoundsMorse){
-                    app.settingsSet('playSoundMorse', false);
+                    app.settingsSet('playSoundsMorse', false);
+                    btn_sound.removeClass('on');
+                    btn_sound.removeClass('icon-sound-on');
+                    btn_sound.addClass('icon-sound-off');
                 } else {
-                    app.settingsSet('playSoundMorse', true);
+                    app.settingsSet('playSoundsMorse', true);
+                    btn_sound.addClass('on');
+                    btn_sound.removeClass('icon-sound-off');
+                    btn_sound.addClass('icon-sound-on');
                 }
             });
 
-            app.dom7('.morse-button-screen').click(function(){
-                if(app.settings.playSoundsMorse){
+            if(app.settings.playSoundsMorse){
+                app.settingsSet('playSoundsMorse', true);
+                btn_sound.addClass('on');
+                btn_sound.removeClass('icon-sound-off');
+                btn_sound.addClass('icon-sound-on');
+            } else {
+                app.settingsSet('playSoundsMorse', false);
+                btn_sound.removeClass('on');
+                btn_sound.removeClass('icon-sound-on');
+                btn_sound.addClass('icon-sound-off');
+            }
+
+            var btn_screen = app.dom7('.morse-button-screen');
+            btn_screen.click(function(){
+                if(app.settings.displayFlash){
                     app.settingsSet('displayFlash', false);
+                    btn_screen.removeClass('on');
+                    btn_screen.removeClass('icon-screen-on');
+                    btn_screen.addClass('icon-screen-off');
                 } else {
                     app.settingsSet('displayFlash', true);
+                    btn_screen.addClass('on');
+                    btn_screen.removeClass('icon-screen-off');
+                    btn_screen.addClass('icon-screen-on');
                 }
             });
+
+            if(app.settings.displayFlash){
+                btn_screen.addClass('on');
+                btn_screen.removeClass('icon-screen-off');
+                btn_screen.addClass('icon-screen-on');
+            } else {
+                btn_screen.removeClass('on');
+                btn_screen.removeClass('icon-screen-on');
+                btn_screen.addClass('icon-screen-off');
+            }
+
+
+
         },
         morseIconSaveBlock:false,
         morseIconSaveAnimation: function(){
@@ -973,7 +1153,7 @@
                         save.css('opacity', '1');
                         app.morseIconSaveBlock = false;
                     }, 500);
-                }, 1000);
+                }, 500);
             }, 500);
         },
 
@@ -1120,6 +1300,100 @@
             app.dom7('.modal-overlay').removeClass('modal-overlay-visible');
             app.dom7('.page-content').removeClass('blur');
             app.dom7('.navbar').removeClass('blur');
+            app.stop();
+            app.switchButtonAllOff();
+        },
+
+        screenFlashlightInterval: null,
+
+        screenFlashlightOpen: function(){
+            app.dom7('.screen-flashlight').addClass(app.settings.displayFlashColor);
+            app.dom7('.screen-flashlight .color').removeClass('selected');
+            app.dom7('.screen-flashlight .color.'+app.settings.displayFlashColor).addClass('selected');
+            app.dom7('.screen-flashlight').css('display', 'block');
+            app.dom7('#screen-flashlight-brightness').prop('value', app.settings.displayBrightness);
+            //app.dom7('.screen-flashlight .close').off();
+            app.dom7('.screen-flashlight .close').click(function(){
+                app.screenFlashlightClose();
+            });
+            app.screenFlashlightInterval = setInterval(app.screenFlashlightRange, 50);
+            //app.dom7('.color').off();
+            app.dom7('.color').click(app.screenFlashlightSetColor);
+            app.screenFlashLightOn();
+        },
+
+        screenFlashlightClose: function(){
+            app.dom7('.screen-flashlight').css('display', 'none');
+            clearInterval(app.screenFlashlightInterval);
+            app.switchButtonAllOff();
+
+            if(app.playbackMode == 1){//morse play
+                var btn_screen = app.dom7('.morse-button-screen');
+                app.settingsSet('displayFlash', false);
+                btn_screen.removeClass('on');
+                btn_screen.removeClass('icon-screen-on');
+                btn_screen.addClass('icon-screen-off');
+            }
+        },
+
+        screenFlashlightRange: function(){
+            var range = app.dom7('#screen-flashlight-brightness');
+            if(range.prop('value') != app.settings.displayBrightness){
+                app.setDisplayBrightness(range.prop('value'));
+            }
+        },
+
+        screenFlashLightOn: function(){
+            app.dom7('.screen-flashlight').removeClass('screen-off');
+        },
+
+        screenFlashLightOff: function(){
+            app.dom7('.screen-flashlight').addClass('screen-off');
+        },
+
+        screenFlashlightSetColor: function(e){
+            var color = app.dom7(e.target).dataset().color;
+            var screen = app.dom7('.screen-flashlight');
+            screen.removeClass('red');
+            screen.removeClass('blue');
+            screen.removeClass('green');
+            screen.removeClass('white');
+            screen.addClass(color);
+            app.dom7('.color.red').removeClass('selected');
+            app.dom7('.color.blue').removeClass('selected');
+            app.dom7('.color.green').removeClass('selected');
+            app.dom7('.color.white').removeClass('selected');
+            app.dom7('.color.'+color).addClass('selected');
+            app.settingsSet('displayFlashColor', color);
+        },
+        stroboscopeEnabled:false,
+        stroboscope: function(){
+            if(app.stroboscopeEnabled){
+                app.stroboscopeOn();
+            }
+        },
+        stroboscopeOn: function(){
+            if(!app.stroboscopeEnabled) return;
+            app.flashLightOn();
+            setTimeout(app.stroboscopeOff, 10);
+        },
+        stroboscopeOff: function(){
+            if(!app.stroboscopeEnabled) return;
+            app.flashLightOff();
+            setTimeout(app.stroboscope, 10);
+        },
+        stroboscopeToggle: function(){
+            if(app.stroboscopeEnabled){
+                app.stroboscopeStop();
+            } else {
+                app.stroboscopeOn();
+                app.stroboscopeEnabled = true;
+            }
+        },
+        stroboscopeStop: function(){
+            app.stroboscopeEnabled = false;
+            app.stroboscopeOff();
+            app.switchButtonOff('stroboscope');
         }
     };
     document.addEventListener('DOMContentLoaded', app.init);
