@@ -5,7 +5,8 @@
             f7_enable:true,
             f7_config:{},
             dom7_enable:true,
-            JSAPI_enable:true
+            JSAPI_enable:true,
+            debug:false
         },
         platform:'iOS',
         free: true,
@@ -15,7 +16,7 @@
         adTime:null,
         JSAPI:null,
         loadingDisabled:true,
-        loadingFakeTime:1000,
+        loadingFakeTime:2000,
         loadingAnimationTime:700,
         playbackStop:false,
         playbackMode:0,//0 - stoped, 1 - played
@@ -23,6 +24,7 @@
         batteryUseInMin:0.05,
         screenBrightnessBeforeLaunch:-1,
         html5sounds:false,//если true - звуки будут воспроизводиться через html5
+        flashLight:false,//фонарик доступен(есть в устройстве и т.п.)
         settings: {
             flashLightLevel:0.5,
             playSounds: false,
@@ -31,7 +33,9 @@
             displayFlash: false,
             displayFlashColor:'red',
             displayBrightness: 0.5,
-            restoreScreenBrightness:true
+            restoreScreenBrightness:true,
+            turnFlashOnLaunch: false,
+            notFirstLaunch:false
         },
         settingsDefault: {
             flashLightLevel:0.5,
@@ -41,7 +45,9 @@
             displayFlash: false,
             displayFlashColor:'red',
             displayBrightness: 0.5,
-            restoreScreenBrightness:true
+            restoreScreenBrightness:true,
+            turnFlashOnLaunch: false,
+            notFirstLaunch:false
         },
         meta: {
             title:"App",
@@ -145,6 +151,9 @@
                 //}
             }
         },
+        /**
+         * Инициализация приложения
+         */
         init : function(){
             if(app.config.f7_enable) {
                 app.f7 = new Framework7(app.f7_config);
@@ -155,31 +164,39 @@
             if(app.config.dom7_enable){
                 app.dom7 = Dom7;
             }
+            /**
+             * Библиотека для работы с нативными функциями iOS и Android
+             */
             if(app.config.JSAPI_enable){
                 app.JSAPI = JSAPI;
+                app.log = app.JSAPI.log || console.log;
             }
+
+
 
             app.free = app.dom7('body').hasClass('app-free');
 
             JSAPI.keepScreenOn();
 
+            /**
+             * проверяем наличие фонарика
+             */
+            app.flashLight = app.checkFlashLight();
+
             app.loadingStart();
-            setTimeout(function(){app.settingsApply();}, 100);
+            app.settingsApply();
 
-            app.dom7('#turnOn').on('click', function(){
-                app.flashLightOn();
-            });
-            app.dom7('#turnOff').on('click', function(){
-                app.flashLightOff();
-            });
+            window.addEventListener('appCloseEvent', app.onhide);
+            window.addEventListener('appMaximizeEvent', app.onrestore);
 
 
-            app.GPSInit();
-            app.compass();
-            app.batteryInit();
-            app.pageIndexInit();
-            //app.flashlightButtonInit();//TODO deprecated, delete
             //app.flashLightLevelSliderInit();
+
+            app.f7.onPageInit('*', function(page){
+                if(page.page != 'index'){
+                    clearInterval(app.pageIndexFlashLightLevelInterval);
+                }
+            });
 
             app.f7.onPageInit('morse', function(page){
                 app.pageMorseInit(page);
@@ -193,21 +210,48 @@
                 app.pageSettingsInit();
             });
 
-            app.f7.onPageInit('*', function(page){
-                if(page.page != 'index'){
-                    clearInterval(app.pageIndexFlashLightLevelInterval);
-                }
-            });
+            /**
+             *  инициализация главной страницы
+             */
+            app.pageIndexInit();
+
+
 
         },
-        //метод вызывается при закрытии приложения
+
+        /**
+         * метод вызывается при закрытии приложения
+         */
         //TODO no JSAPI method
-        destroy: function(){
+        ondestroy: function(){
+            app.log("ON DESTROY!");
             //restore screen brightness
             if(app.settings.restoreScreenBrightness){
                 app.JSAPI.setScreenBrightness(app.screenBrightnessBeforeLaunch);
             }
         },
+
+        /**
+         * вызывается при сворачивании приложения
+         * (при переходе в фоновый режим)
+         */
+        onhide: function(){
+            app.log("ON HIDE!");
+            if(app.settings.restoreScreenBrightness){
+                app.JSAPI.setScreenBrightness(app.screenBrightnessBeforeLaunch);
+            }
+        },
+        /**
+         * вызывается при восстановлении приложения
+         * (если было скрыто)
+         */
+        onrestore: function(){
+            app.log("ON RESTORE!");
+            if(app.settings.restoreScreenBrightness){
+                app.settingsApply();
+            }
+        },
+        log: console.log,
         /**
          * функция показа банера (в фри версии)
          * вызывается при инициализации каждой страницы
@@ -239,6 +283,28 @@
           localStorage.setItem("db", JSON.stringify(db));
         },
 
+        openSettings: function(){
+            app.f7.popup('.popup-settings');
+            app.pageSettingsInit();
+            app.dom7('.left').html('<a href="#" class="settings-open"><i class="icon icon-close"></i></a>');
+            app.dom7('.settings-open').click(function(){
+               app.closeSettings();
+            });
+
+            app.dom7('.navbar .center').text('Settings');
+            app.f7.sizeNavbars('.view-main');
+        },
+
+        closeSettings: function(){
+            app.f7.closeModal('.popup-settings');
+            app.dom7('.left').html('<a href="#" class="settings-open"><i class="icon icon-settings"></i></a>');
+            app.dom7('.settings-open').click(function(){
+                app.openSettings();
+            });
+            app.dom7('.navbar .center').text(app.meta.title);
+            app.f7.sizeNavbars('.view-main');
+        },
+
         pageSettingsInit: function(){
             app.dom7('#settings-sounds').change(function(){
                 app.settingsSet('playSounds', app.dom7('#settings-sounds').prop('checked'));
@@ -252,11 +318,16 @@
 
             app.dom7('#settings-sounds-morse').prop('checked', app.settings.playSoundsMorse);
 
-            app.dom7('#settings-display-flash').change(function(){
-                app.settingsSet('displayFlash', app.dom7('#settings-display-flash').prop('checked'));
+            app.dom7('#settings-brightness-control').change(function(){
+                app.settingsSet('restoreScreenBrightness', app.dom7('#settings-brightness-control').prop('checked'));
             });
+            app.dom7('#settings-brightness-control').prop('checked', app.settings.restoreScreenBrightness);
 
-            app.dom7('#settings-display-flash').prop('checked', app.settings.displayFlash);
+            app.dom7('#settings-flash-on-launch').change(function(){
+                app.settingsSet('turnFlashOnLaunch', app.dom7('#settings-flash-on-launch').prop('checked'));
+            });
+            app.dom7('#settings-flash-on-launch').prop('checked', app.settings.turnFlashOnLaunch);
+
 
             app.dom7('#settings-volume').prop('value', app.settings.soundVolume);
             app.dom7('#settings-display-brightness').prop('value', app.settings.displayBrightness);
@@ -269,10 +340,16 @@
 
         pageIndexInit: function(){
 
-            app.compassRotate(0);
+            if(app.settings.turnFlashOnLaunch){
+                app.flashLightOn();
+                app.flashLightButtonOn();
+                app.flashLightEnabled = true;
+            }
 
-            app.dom7('#sliderFlashLightLevel').prop('value', app.settings.flashLightLevel);
-            app.dom7('#sliderDisplayBrightness').prop('value', app.settings.displayBrightness);
+            app.GPSInit();
+            app.compass();
+            app.batteryInit();
+
             app.pageIndexFlashLightLevelInterval = setInterval(app.pageIndexSlidersCheck, 500);
             var flashLightbtn = app.dom7('#flashLightButton');
             flashLightbtn.click(function(){
@@ -302,10 +379,6 @@
 
             });
 
-            app.dom7('.popup-test').click(function(){
-                app.openPopup();
-            });
-
             app.dom7('.button-item').click(function(e){
                 var btn = app.dom7(e.target);
                 if(btn.hasClass('on')){
@@ -314,6 +387,14 @@
                     app.dom7('.button-item').removeClass('on');
                     btn.addClass('on');
                 }
+            });
+
+            app.dom7('.settings-open').click(function(){
+               app.openSettings();
+            });
+
+            app.dom7('#bottomButtonMorse').click(function(){
+                app.openPopup();
             });
 
            // app.openPopup();
@@ -330,18 +411,18 @@
                 app.setDisplayBrightness(displayBrightness);
             }
         },
-        //framework7 range element not support good onchange method
+        //TODO: framework7 range element not support good onchange method
         pageSettingsSlidersCheck: function(){
             if(app.dom7('#settings-volume').prop('value') != app.settings.soundVolume){
                 app.settingsSet('soundVolume', app.dom7('#settings-volume').prop('value'));
             }
 
             if(app.dom7('#settings-display-brightness').prop('value') != app.settings.displayBrightness){
-                app.settingsSet('displayBrightness', app.dom7('#settings-display-brightness').prop('value'));
+                app.setDisplayBrightness(app.dom7('#settings-display-brightness').prop('value'));
             }
 
             if(app.dom7('#settings-flashlight-brightness').prop('value') != app.settings.flashLightLevel){
-                app.settingsSet('flashLightLevel', app.dom7('#settings-flashlight-brightness').prop('value'));
+                app.setFlashLightLevel(app.dom7('#settings-flashlight-brightness').prop('value'));
             }
         },
         morseItemSave: function(text, id){
@@ -536,7 +617,9 @@
                 console.log("START TEXT: "+text+" MORSE: "+app.string2Morse(text));
             }
             if(position >= text.length) {
-                app.dom7('.morse-code').css('left', '0px');
+                var code = app.dom7('.morse-code');
+                code.css('transform', 'translateX(0px)');
+                code.css('-webkit-transform', 'translateX(0px)');//iOS Webkit don't support transform
                 console.log("END OF TEXT");
                 if(app.dom7('#cb_loop').prop('checked')){
                     app.morseText(text, 0);
@@ -546,7 +629,9 @@
                 return;
             }
             var morse_symbol = app.dom7('.morse-symbol-'+position);
-            app.dom7('.morse-code').css('left', -document.getElementsByClassName('morse-symbol-'+position)[0].offsetLeft+'px');
+            var code = app.dom7('.morse-code');
+            code.css('transform', 'translateX('+(-document.getElementsByClassName('morse-symbol-'+position)[0].offsetLeft)+'px)');
+            code.css('-webkit-transform', 'translateX('+(-document.getElementsByClassName('morse-symbol-'+position)[0].offsetLeft)+'px)');//iOS Webkit don't support transform
 
             morse_symbol.addClass('morse-symbol-active');
             var morse = app.char2Morse(text[position]);
@@ -573,35 +658,9 @@
 
         compass: function(){
 
-            /*var rotate = function (deg) {
-                //app.dom7(".compass").css({ "transform": "rotate(0deg)"});
-                //app.dom7(".compass").css({ "transform": "rotate(" + deg + "deg)"});
-                app.dom7(".compass-bg").css({ "background-position-x":  deg + "px"});
-            };
-
-            if (app.JSAPI.listenMagneticField) {
-                console.log("COMPASS: Use JSAPI magneticField");
-                app.JSAPI.listenMagneticField(2000);
-                JSAPI.log("LISTEN");
-
-                window.addEventListener('magneticFieldChangedEvent', function () {
-                    console.log('magnetic changed ' + getBufferEventVar().x + ' | ' + getBufferEventVar().y + ' | ' + getBufferEventVar().z);
-                    rotate(360 - getBufferEventVar().x);
-                });
-
-            } else {
-                JSAPI.log("LISTEN2");
-                if (window.DeviceOrientationEvent) {//html5
-                    console.log("COMPASS: Use html5 device orientation");
-                    window.addEventListener("deviceorientation", function (e) {
-                        rotate(360 - e.alpha);
-                    }, false);
-                } else {
-                    console.log("No available methods for get magnetic field information! Your device realy support it?");
-                }
-            }*/
-
             app.JSAPI.log("COMPAS INIT");
+
+            app.compassRotate(0);
 
             window.addEventListener('magneticHeadingEvent', function(){
                 app.compassRotate(getBufferEventVar().magneticHeading);
@@ -627,7 +686,6 @@
                 app.dom7('.compass-bg').css('transition-duration', '0.5s');
             }
             if((deg > 180 && deg < 355) && app.compassOldRotate >= 355) {
-                console.log("AAAAAA");
                 app.dom7('.compass-bg').css('transition-duration', '0s');
             }
             var screenWidth = app.dom7(window).width();
@@ -654,7 +712,7 @@
                 app.dom7('.compass-bg').css('transition-duration', '0.5s');
             }*/
 
-            app.dom7('.compass-debug').text(deg);
+            if(app.config.debug)app.dom7('.compass-debug').text(deg);
             var markPosition = screenWidth/2 - 1;//2 - width of mark, 2/2 = 1
             app.dom7('.compass-mark').css('left', markPosition + 'px');
             app.dom7(".compass-bg").css({ "background-position-x":  '-'+position + "px"});
@@ -690,6 +748,26 @@
         flashLightButton : {
             _value:0,
              stopAllAnimations: false
+        },
+
+        flashLightButtonOn: function(){
+            var flashLightbtn = app.dom7('#flashLightButton');
+            flashLightbtn.css('color', 'rgba(255, 255, 255, 0)');
+            setTimeout(function(){
+                flashLightbtn.text('Off');
+                flashLightbtn.css('color', 'rgba(255, 255, 255, 1)');
+            }, 350);
+            flashLightbtn.addClass('on');
+        },
+
+        flashLightButtonOff: function(){
+            var flashLightbtn = app.dom7('#flashLightButton');
+            flashLightbtn.css('color', 'rgba(255, 255, 255, 0)');
+            setTimeout(function(){
+                flashLightbtn.text('On');
+                flashLightbtn.css('color', 'rgba(255, 255, 255, 1)');
+            }, 350);
+            flashLightbtn.removeClass('on');
         },
 
         flashlightButtonInit: function(){
@@ -857,7 +935,9 @@
              });
             app.renderMorse(text.value);
             app.dom7('.save').on('click', function(){
+                if(app.morseIconSaveBlock) return;
                 app.morseSaveItem();
+                app.morseIconSaveAnimation();
             });
 
             app.dom7('.morse-button-sound').click(function(){
@@ -875,6 +955,26 @@
                     app.settingsSet('displayFlash', true);
                 }
             });
+        },
+        morseIconSaveBlock:false,
+        morseIconSaveAnimation: function(){
+            app.morseIconSaveBlock = true;
+            var save = app.dom7('.save');
+            save.css('opacity', '0');
+            setTimeout(function(){
+                save.removeClass('icon-save');
+                save.addClass('icon-check');
+                save.css('opacity', '1');
+                setTimeout(function(){
+                    save.css('opacity', '0');
+                    setTimeout(function(){
+                        save.removeClass('icon-check');
+                        save.addClass('icon-save');
+                        save.css('opacity', '1');
+                        app.morseIconSaveBlock = false;
+                    }, 500);
+                }, 1000);
+            }, 500);
         },
 
         morseItemsBuild: function(){
@@ -933,18 +1033,48 @@
             var minutes = app.batteryLevel / app.batteryUseInMin;
             app.dom7('.battery').text(minutes+'min');
         },
+        checkFlashLight: function(){
+            app.JSAPI.isFlashLight();
+            return getBufferEventVar().flashLightWork == "true";
+        },
         setFlashLightLevel: function(value){
+            if(value < 0.1 || value == undefined || !value) return app.log("Error! setFlashLightLevel: value incorrect ("+value+")");
+            if(!app.flashLight) return app.log("Flashlight unavailable!");
             app.settingsSet('flashLightLevel', value);
             app.JSAPI.flashLightLevel(value);
+        },
+        getFlashLightLevel: function(){
+            return app.log("Warning! getFlashLightLevel not supported current JSAPI");
+            if(!app.flashLight) return app.log("Flashlight unavailable!");
+            app.JSAPI.flashLightLevel();
         },
         setDisplayBrightness: function(value){
             app.settingsSet('displayBrightness', value);
             app.JSAPI.setScreenBrightness(value);
         },
+        getDisplayBrightness: function(){
+            if(app.JSAPI && app.JSAPI.getScreenBrightness){
+                app.JSAPI.getScreenBrightness();
+                return parseFloat(getBufferEventVar().brightnessLevel);
+            }
+        },
+        /**
+         * функция вызывается при первом запуске приложения на устройстве
+         */
+        firstLaunch: function(){
+
+        },
         settingsLoad: function(){
             var db = app.getLocalDB();
             var settings = db.settings || app.settingsDefault;
+            if(!settings.notFirstLaunch || settings.notFirstLaunch == undefined){
+                app.firstLaunch();
+                settings.notFirstLaunch = true;
+                settings.displayBrightness = app.getDisplayBrightness();
+                settings.flashLightLevel = app.getFlashLightLevel();
+            }
             app.settings = settings;
+            app.settingsSave();
         },
         settingsSave: function(){
             var db = app.getLocalDB();
@@ -956,24 +1086,21 @@
             app.settingsSave();
         },
         settingsApply: function(){
+
+            app.screenBrightnessBeforeLaunch = app.getDisplayBrightness();
+
             if(app.JSAPI.flashLightLevel){
-                app.JSAPI.flashLightLevel(app.settings.flashLightLevel);
+                app.setFlashLightLevel(app.settings.flashLightLevel);
             }
 
             if(app.JSAPI.setScreenBrightness){
-                app.JSAPI.setScreenBrightness(app.settings.displayBrightness);
+                app.setDisplayBrightness(app.settings.displayBrightness);
             }
-        },
-        screenBrightnessSliderInit: function(){
-
-        },
-        setScreenBrightness: function(value){
-            app.settingsSet('displayBrightness', value);
-            app.JSAPI.setScreenBrightness(value);
         },
         openPopup: function(){
             var modal = app.dom7('.modal-custom');
             app.dom7('.page-content').addClass('blur');
+            app.dom7('.navbar').addClass('blur');
             app.f7.get("morse2.html", {}, {}, function(data){
                 app.dom7('.modal-content').html(data);
                 //modal.css('margin-top', '-'+modal.height()/2+'px');
@@ -992,6 +1119,7 @@
             app.dom7('.modal-custom').css('display', 'none');
             app.dom7('.modal-overlay').removeClass('modal-overlay-visible');
             app.dom7('.page-content').removeClass('blur');
+            app.dom7('.navbar').removeClass('blur');
         }
     };
     document.addEventListener('DOMContentLoaded', app.init);

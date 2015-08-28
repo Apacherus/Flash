@@ -17,6 +17,11 @@
     <div class="view view-main">
         <div class="navbar">
             <div class="navbar-inner">
+                <div class="left">
+                    <a href="#" class="settings-open">
+                        <i class="icon icon-settings"></i>
+                    </a>
+                </div>
                 <div class="center sliding">Awesome App</div>
             </div>
         </div>
@@ -29,7 +34,7 @@
                         </div>
 
                     </div>
-                    <div class="compass-debug">222</div>
+                    <div class="compass-debug"></div>
 
                     <div class="information-wrapper">
                         <div class="info-gps">
@@ -63,7 +68,7 @@
                         <div class="button-item button-stroboscope">
                             <div class="button-text">Light</div>
                         </div>
-                        <div class="button-item button-stroboscope">
+                        <div class="button-item button-stroboscope" id="bottomButtonMorse">
                             <div class="button-text">Morse</div>
                         </div>
                         <div class="button-item button-stroboscope">
@@ -79,7 +84,105 @@
                     </div>
 
 
+                    <div class="popup popup-settings">
+                        <div class="content-block">
+                            <div class="list-block">
 
+                                <ul>
+                                    <li>
+                                        <div class="item-content">
+
+                                            <div class="item-inner">
+                                                <div class="item-title label">Sounds</div>
+                                                <div class="item-input">
+                                                    <label class="label-switch">
+                                                        <input id="settings-sounds" type="checkbox">
+                                                        <div class="checkbox"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title label">Morse Sounds</div>
+                                                <div class="item-input">
+                                                    <label class="label-switch">
+                                                        <input id="settings-sounds-morse" type="checkbox">
+                                                        <div class="checkbox"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title label">Brightness Control</div>
+                                                <div class="item-input">
+                                                    <label class="label-switch">
+                                                        <input id="settings-brightness-control" type="checkbox">
+                                                        <div class="checkbox"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-title label">Turn Flash on Launch</div>
+                                                <div class="item-input">
+                                                    <label class="label-switch">
+                                                        <input id="settings-flash-on-launch" type="checkbox">
+                                                        <div class="checkbox"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <div class="list-block-label">Volume</div>
+                                    <li>
+                                        <div class="item-content">
+
+                                            <div class="item-inner">
+                                                <div class="item-input">
+                                                    <div class="range-slider">
+                                                        <input id="settings-volume" type="range" min="0" max="1" value="0.5" step="0.005">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <div class="list-block-label">Display Brightness</div>
+                                    <li>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-input">
+                                                    <div class="range-slider">
+                                                        <input id="settings-display-brightness" type="range" min="0" max="1" value="0.5" step="0.005">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <div class="list-block-label">Flashlight Brightness</div>
+                                    <li>
+                                        <div class="item-content">
+                                            <div class="item-inner">
+                                                <div class="item-input">
+                                                    <div class="range-slider">
+                                                        <input id="settings-flashlight-brightness" type="range" min="0.1" max="1" value="0.5" step="0.005">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -91,7 +194,7 @@
 </div>
 
 <div class="modal-custom">
-        <div class="modal-content"></div>
+<div class="modal-content"></div>
 
 </div>
 <div class="modal-overlay"></div>

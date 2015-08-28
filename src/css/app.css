@@ -1,6 +1,11 @@
-
+.statusbar-overlay {
+    background:linear-gradient(#191919, #252525);
+}
 .page-content {
     padding-top: 50px;
+}
+
+.page, body, .page-content {
     background-color: #131313;
 }
 
@@ -18,7 +23,7 @@
     height: 100%;
     top:0;
     left:0;
-    background-image:url("../img/app/three-dots.svg"), linear-gradient(red, green);
+    background-image:url("../img/app/three-dots.svg"), linear-gradient(#252525, #191919);
     background-repeat: no-repeat;
     background-position: center;
     z-index: 999999;
@@ -27,14 +32,90 @@
     transition-duration: 0.7s;
 }
 
+.popup-overlay {
+    z-index: 1000 !important;
+}
+.popup-settings,
+.popup-settings .list-block ul,
+.range-slider input[type=range]:after {
+    background-color: #141414;
+}
+.popup-settings .content-block {
+    margin-top:50px;
+}
 
+.popup-settings .label-switch .checkbox:before,
+.range-slider input[type="range"]::-webkit-slider-thumb:before,
+.popup-settings .label-switch .checkbox {
+    background-color: #E74C3C;
+}
 
 .app-free .page-content {
     padding-bottom: 50px;
 }
 
-.statusbar-overlay {
-    background-color: #000000;
+.popup-settings .list-block .item-inner:after,
+.popup-settings .list-block ul:after,
+.popup-settings .list-block ul:before {
+    background-color: transparent;
+}
+
+.popup-settings .list-block .list-block-label {
+    margin:5px 0 5px;
+    font-size: 17px;
+    color:#585858;
+}
+
+.popup-settings .item-input {
+    text-align: right;
+}
+
+.popup-settings .item-title {
+    color:#585858;
+}
+.icon {
+    width:25px;
+    height: 25px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size:25px !important;
+    padding:10px;
+}
+.icon-settings {
+    background-image: url("../img/settings.svg");
+}
+
+.icon-close {
+    background-image: url("../img/close.png");
+}
+
+.icon-save {
+    background-image: url("../img/save.svg");
+    background-size:100%;
+}
+
+.icon-check {
+    background-image: url("../img/check.svg");
+}
+
+.icon-sound-on {
+    background-image: url("../img/sound-on.svg");
+}
+
+.icon-screen-off {
+    background-image: url("../img/screen_off.svg");
+    opacity: 0.6;
+}
+
+@media (min-height: 630px) and (min-width: 630px) {
+    .popup:not(.tablet-fullscreen) {
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        margin-left: 0;
+        margin-top: 0;
+    }
 }
 
 /* iPad portrait */
@@ -58,11 +139,12 @@ and (orientation: portrait) {
 .morse-code {
     font-size: 70px;
     position: absolute;
-    transition-property: left;
+    transition-property: transform;
     transition-duration: 1.5s;
     text-align:left;
     width:100000px;
     color: #a9a9a9;
+    margin-top:-10px;
 }
 
 .morse-symbol {
@@ -71,21 +153,35 @@ and (orientation: portrait) {
     padding: 5px;
     min-width: 5px;
     min-height: 5px;
-    transition: color 1.0s, text-shadow 0.3s, transform 1.0s;
-    transform: translateY(0px) scale(0.9, 0.9);
+    transition: color 1.0s, text-shadow 0.3s;
 }
 
 .morse-code-wrapper {
     overflow-x: scroll;
     overflow-y: hidden;
-    height: 150px;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+.morse-protection-overlay {
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height: 100%;
+    background-color:rgba(0, 0, 0, 0.01)
+}
+
+.morse-code-first-wrapper {
     position: relative;
+    height: 150px;
+    width:100%;
 }
 
 .morse-symbol-active {
     color: #ff9089;
     text-shadow: 1px 1px 4px rgba(255, 10, 0, 0.58), -1px -1px 4px rgba(255, 10, 0, 0.41), 0px 0px 10px #ff8670;
-    transform: translateY(-5px) scale(1.4, 1.4);
 }
 
 .compass-wrapper {
@@ -174,7 +270,6 @@ and (orientation: portrait) {
     text-transform: uppercase;
     opacity: 0.2;
     word-wrap: break-word;
-    min-width: 60px;
     font-size: 12px;
 }
 
@@ -195,8 +290,6 @@ and (orientation: portrait) {
     justify-content: center;
     flex-direction: row;
 }
-
-
 
 .compass {
     position: absolute;
@@ -340,7 +433,7 @@ and (orientation: portrait) {
 }
 
 .list-block .item-title.label {
-    width:45% !important;
+    width:170px;
 }
 
 .blur {
@@ -364,7 +457,14 @@ and (orientation: portrait) {
     position: absolute;
     right:-20px;
     top:-20px;
-    background-color: red;
+    border:2px solid #242424;
+    border-radius: 50%;
+    background-color:#0B0B0B;
+}
+
+.modal-custom-close.icon {
+    padding: 0px;
+    background-size:20px !important;
 }
 
 .morse-wrapper{
@@ -374,23 +474,24 @@ and (orientation: portrait) {
 }
 
 .morse-modal {
-    background-color: #464646;
+    background-color: #0B0B0B;
     padding: 20px;
-    border:2px solid black;
+    box-shadow:0 0 10px rgba(109, 109, 109, 0.53);
     border-radius:10px;
     position: relative;
 }
 
 .morse-modal textarea {
     color:white;
-    background-color:#464646;
+    background-color:#0B0B0B;
     border:none;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid #242424;
+    border-radius:0;
     font-size:20px;
     font-weight: 100;
     font-family: 'Helvetica Neue';
     text-align: center;
-    height: 20px;
+    height: 50px;
     margin-top:20px;
 
     width: 100%;
@@ -398,7 +499,7 @@ and (orientation: portrait) {
 
 .morse-modal .modal-bottom-buttons {
     position: absolute;
-    bottom: -20px;
+    bottom: -8px;
     margin-left:-20px;/* fix wrapper padding */
     height: 40px;
     width:100%;
@@ -407,15 +508,25 @@ and (orientation: portrait) {
     justify-content: center;
 }
 
+.modal-bottom-buttons .icon {
+    padding: 0;
+    background-size:30px !important;
+}
+
 .modal-bottom-button {
-    width:40px;
-    height: 40px;
-    border:2px solid black;
+    width:60px;
+    height: 60px;
+    border:2px solid #242424;
     border-radius: 50%;
-    background-color:#464646;
+    background-color:#0B0B0B;
     margin-left:10px;
     margin-right: 10px;
     flex:0 0 auto;
+}
+
+.modal-bottom-button.save {
+    opacity:1;
+    transition: opacity 0.5s;
 }
 
 .bottom-buttons {
@@ -428,12 +539,12 @@ and (orientation: portrait) {
 
 .bottom-button {
     flex:0 0 auto;
-    width:40px;
-    height: 40px;
-    border:2px solid white;
+    width:40px !important;
+    height: 40px !important;
     border-radius: 50%;
     margin-left:10px;
     margin-right: 10px;
+    background-size:100% !important;
 }
 
 .button-on {
@@ -448,6 +559,9 @@ and (orientation: portrait) {
 
 .morse-modal-title {
     text-align: center;
-    font-size: 20px;
+    font-size: 17px;
     color: #aeaeae;
+    font-weight: 200;
+    text-transform: uppercase;
 }
+
