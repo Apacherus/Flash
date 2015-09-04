@@ -1,12 +1,35 @@
-.statusbar-overlay {
-    background:linear-gradient(#191919, #252525);
+/**
+ * Disable selection
+ **/
+body {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent;
 }
+
+.statusbar-overlay {
+    background:#606060;
+}
+
 .page-content {
     padding-top: 50px;
 }
 
 .page, body, .page-content {
     background-color: #131313;
+}
+
+img.preloader{
+    position: absolute;
+    top:-100px;
+    left:-100px;
+    width:1px;
+    height: 1px;
 }
 
 .navbar {
@@ -35,12 +58,14 @@
 .popup-overlay {
     z-index: 1000 !important;
 }
+.popup-list,
 .popup-settings,
+.popup-list .list-block ul,
 .popup-settings .list-block ul,
 .range-slider input[type=range]:after {
     background-color: #141414;
 }
-.popup-settings .content-block {
+.popup-settings .content-block, .popup-list .content-block {
     margin-top:50px;
 }
 
@@ -53,7 +78,9 @@
 .app-free .page-content {
     padding-bottom: 50px;
 }
-
+/*.popup-list .list-block .item-inner:after,
+.popup-list .list-block ul:after,
+.popup-list .list-block ul:before,*/
 .popup-settings .list-block .item-inner:after,
 .popup-settings .list-block ul:after,
 .popup-settings .list-block ul:before {
@@ -73,6 +100,106 @@
 .popup-settings .item-title {
     color:#585858;
 }
+
+.morse-list-toolbar {
+    width: 100%;
+    height: 60px;
+    position: absolute;
+    left:0;
+    bottom: -200px;
+    background-color: rgba(26, 26, 26, 0.95);
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    z-index: 9999;
+    transition: bottom 0.5s;
+
+}
+
+.morse-list-toolbar .toolbar-button-text {
+    padding-top: 2px;
+    color:white;
+    opacity:0.2;
+}
+
+.morse-list-toolbar .toolbar-button {
+    flex:1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.morse-list-toolbar .toolbar-button.active > .toolbar-button-text {
+    color:#E74C3C;
+    opacity: 1;
+}
+
+.morse-list-toolbar .toolbar-button-icon {
+    width:25px;
+    height: 25px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.morse-list .toolbar-button-icon {
+    background-image: url("../img/save-off.png");
+    opacity: 0.5;
+}
+
+.morse-list.toolbar-button.active > .toolbar-button-icon {
+    background-image: url("../img/save-on.png");
+    opacity: 1;
+}
+
+.morse-codes .toolbar-button-icon  {
+    background-image: url("../img/list-off.png");
+}
+
+.morse-codes.toolbar-button.active > .toolbar-button-icon {
+    background-image: url("../img/list-on.png");
+}
+
+.app-free .morse-list-toolbar {
+    padding-bottom: 50px;
+}
+
+.ipad.app-free .morse-list-toolbar {
+    padding-bottom: 128px;
+}
+
+.list-codes {
+    display: none;
+}
+
+.codes-content {
+    display: none;
+}
+
+.app-free .codes-content {
+    padding-bottom: 50px;
+}
+
+.ipad.app-free .codes-content {
+    padding-bottom: 128px;
+}
+
+.codes-liter {
+    color:white;
+    font-size: 20px;
+    text-transform: uppercase;
+}
+
+.codes-code {
+    text-align: left;
+    width:80%;
+    color:#E74C3C;
+    font-size:40px;
+    margin-top:-5px;
+}
+
+
 .icon {
     width:25px;
     height: 25px;
@@ -90,12 +217,21 @@
 }
 
 .icon-save {
-    background-image: url("../img/save.svg");
-    background-size:100%;
+    background-image: url("../img/save.png");
 }
 
 .icon-check {
     background-image: url("../img/check.svg");
+}
+
+.icon-list {
+    background-image: url("../img/list-on.png");
+    background-size: 25px !important;
+}
+
+.icon-plus {
+    background-image: url("../img/plus-on.png");
+    background-size: 27px !important;
 }
 
 .icon-sound-on {
@@ -140,6 +276,11 @@
     opacity: 0.7;
 }
 
+.icon-arrow-right {
+    background-image:url("../img/arrow-right.png");
+    background-size: 17px !important;
+}
+
 @media (min-height: 630px) and (min-width: 630px) {
     .popup:not(.tablet-fullscreen) {
         width: 100%;
@@ -161,13 +302,59 @@ and (orientation: portrait) {
         display: none;
     }
 
-    /*ad banner place*/
-    .app-free .page-content {
-        padding-bottom: 128px !important;
+    .morse-modal textarea {
+        height: 300px !important;
     }
 
 }
 
+@media only screen
+and (device-width : 320px)
+and (device-height: 480px) {
+
+    .compass-wrapper {
+        height: 70px !important;
+    }
+
+    .information-wrapper {
+        font-size: 20px !important;
+    }
+
+    .information-wrapper .info-title {
+        font-size: 12px !important;
+    }
+
+    .morse-modal {
+        margin-top:-25px;
+    }
+
+    .morse-modal textarea {
+        height: 22px !important;
+    }
+
+}
+
+.list-block .item-link.active-state, html:not(.watch-active-state) .list-block .item-link:active {
+    background-color: transparent;
+}
+.codes-content .list-block {
+    padding-bottom: 30px;
+}
+.popup-list .content-block {
+    padding: 0;
+}
+
+.popup-list .list-block .item-content {
+    padding-left: 0;
+}
+
+.popup-list .item-inner {
+    padding-left: 15px;
+}
+
+.popup-list ul:after, .popup-list ul:before {
+    display: none;
+}
 
 .morse-code {
     font-size: 70px;
@@ -183,9 +370,10 @@ and (orientation: portrait) {
 .morse-symbol {
     display: inline-block;
     /*background-color: #ffffff;*/
-    padding: 5px;
+    padding: 0px;
     min-width: 5px;
     min-height: 5px;
+
     transition: color 1.0s, text-shadow 0.3s;
 }
 
@@ -222,6 +410,7 @@ and (orientation: portrait) {
     width:100%;
     height: 120px;
     position: relative;
+    margin-top:-5px;
 }
 
 .compass-bg {
@@ -253,6 +442,17 @@ and (orientation: portrait) {
     width:100%;
     color: #b7b7b7;
     font-size:30px;
+    margin-top:10px;
+}
+
+.ipad .information-wrapper {
+    margin-top:100px;
+    margin-bottom: 100px;
+    font-size:40px;
+}
+
+.ipad .info-bottom{
+    margin-top: 100px;
 }
 
 .info-gps, .info-bottom {
@@ -282,6 +482,10 @@ and (orientation: portrait) {
     align-items: flex-start;
 }
 
+.app-free .buttons-wrapper {
+    margin-top:2px;
+}
+
 .button-item {
     width:46px;
     height: 46px;
@@ -289,6 +493,15 @@ and (orientation: portrait) {
     background-size:cover;
     background-color: #202020;
     border-radius: 50%;
+}
+
+.ipad .button-item{
+    width:80px !important;
+    height: 80px !important;
+}
+
+.ipad .button-text {
+    font-size: 18px !important;
 }
 
 .button-item.on {
@@ -346,6 +559,7 @@ and (orientation: portrait) {
     opacity: 0.2;
     word-wrap: break-word;
     font-size: 12px;
+    margin-top:3px;
 }
 
 .button-item.x .button-text{
@@ -365,6 +579,16 @@ and (orientation: portrait) {
     justify-content: center;
     flex-direction: row;
 }
+
+.app-free .flashlight-wrapper {
+    padding-bottom: 50px;
+}
+
+.ipad.app-free .flashlight-wrapper {
+    padding-bottom: 128px;
+}
+
+
 
 .compass {
     position: absolute;
@@ -495,12 +719,21 @@ and (orientation: portrait) {
 
 }
 
+.lang-ru .stop:after{
+    content:'Выкл';
+    margin-left:-10px;
+}
+
 #play {
     position: relative;
 }
 
 #play:not(.stop):after {
     content: 'On';
+}
+
+.lang-ru #play:not(.stop):after {
+    content: 'Вкл';
 }
 .slider2 {
     position: relative;
@@ -525,7 +758,7 @@ and (orientation: portrait) {
 }
 
 .list-block .item-title.label {
-    width:170px;
+    width:190px;
 }
 
 .blur {
@@ -580,7 +813,7 @@ and (orientation: portrait) {
     border-bottom: 2px solid #242424;
     border-radius:0;
     font-size:20px;
-    font-weight: 100;
+    font-weight: 200;
     font-family: 'Helvetica Neue';
     text-align: center;
     height: 50px;
@@ -751,6 +984,14 @@ and (orientation: portrait) {
 }
 
 
+.app-free .screen-flashlight .display-brightness {
+    padding-bottom: 50px;
+}
+
+.ipad.app-free .screen-flashlight .display-brightness {
+    padding-bottom: 128px;
+}
+
 
 .screen-flashlight.red input::-webkit-slider-thumb:before,
 .screen-flashlight.blue input::-webkit-slider-thumb:before,
@@ -805,8 +1046,14 @@ and (orientation: portrait) {
     justify-content: space-between;
 }
 
+
+
 .app-free .brightness-icon{
-    bottom: 130px;
+    padding-bottom: 50px;
+}
+
+.ipad.app-free .brightness-icon{
+    padding-bottom: 128px;
 }
 
 .brightness-min,

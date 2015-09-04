@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="31px" height="28px" viewBox="0 0 31 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.1 (12002) - http://www.bohemiancoding.com/sketch -->
+    <title>icon_save copy</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="icon_save-copy" sketch:type="MSLayerGroup" stroke="#FFFFFF" stroke-width="2.5">
+            <path d="M0,0.996534824 C0,0.446163838 0.445791009,0 1.00527813,0 L23.4745897,0 C24.0297894,0 24.8004049,0.324278353 25.1769701,0.705238765 L30.0721285,5.65753297 C30.4571275,6.04702559 30.7692308,6.814696 30.7692308,7.36298522 L30.7692308,26.9997865 C30.7692308,27.5521892 30.3224064,28 29.7629768,28 L1.00625392,28 C0.450515227,28 0,27.5601869 0,27.0034652 L0,0.996534824 Z" id="Rectangle-479" sketch:type="MSShapeGroup"></path>
+            <rect id="Rectangle-480" sketch:type="MSShapeGroup" x="7.38461538" y="15.826087" width="16" height="12.173913" rx="1"></rect>
+            <rect id="Rectangle-480-Copy" sketch:type="MSShapeGroup" x="11.0769231" y="0" width="12.3076923" height="10.9565217" rx="1"></rect>
+        </g>
+    </g>
+</svg>

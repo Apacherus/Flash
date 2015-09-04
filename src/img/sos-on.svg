@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="34px" height="32px" viewBox="0 0 34 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.3.1 (12002) - http://www.bohemiancoding.com/sketch -->
+    <title>btn_SOS on</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="btn_SOS-on" sketch:type="MSLayerGroup" transform="translate(-6.000000, -5.000000)">
+            <polygon id="Triangle-1" stroke="#E74C3C" stroke-width="2" sketch:type="MSShapeGroup" points="22.9999406 3.84703113 40.1121098 35.789747 5.88777138 35.789747 "></polygon>
+            <rect id="Rectangle-76" fill="#E74C3C" sketch:type="MSShapeGroup" x="21.520752" y="13.6328125" width="3" height="14" rx="40"></rect>
+            <circle id="Oval-15" fill="#E74C3C" sketch:type="MSShapeGroup" cx="23.0220947" cy="31.1567383" r="1.5"></circle>
+        </g>
+    </g>
+</svg>
